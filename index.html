@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VP Market</title>
+  <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background-color: #141414;
+      color: #ffffff;
+      font-family: 'Rubik', sans-serif;
+      padding-top: calc(env(safe-area-inset-top, 0px) + 40px);
+    }
+    .container {
+      width: 90%;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 16px;
+      position: relative;
+      z-index: 1;
+    }
+    .overlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease;
+      z-index: 5;
+    }
+    .overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+    .menu {
+      position: fixed;
+      top: 0; left: 50%;
+      transform: translate(-50%, -100%);
+      background-color: #1C2324;
+      border-radius: 25px;
+      width: 90%;
+      max-width: 380px;
+      min-height: 425px;
+      padding: 32px 24px 48px;
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.5);
+      transition: transform 0.4s ease;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .menu.active {
+      transform: translate(-50%, 20px);
+    }
+    .menu ul {
+      list-style: none;
+      text-align: center;
+    }
+    .menu li {
+      font-size: 25px;
+      font-weight: 500;
+      margin: 16px 0;
+      cursor: pointer;
+      color: #fff;
+      transition: color 0.3s ease;
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    .menu li:hover {
+      color: #FFC300;
+    }
+    .menu.active li:nth-child(1) { transition: 0.3s ease 0.1s; opacity: 1; transform: translateY(0); }
+    .menu.active li:nth-child(2) { transition: 0.3s ease 0.15s; opacity: 1; transform: translateY(0); }
+    .menu.active li:nth-child(3) { transition: 0.3s ease 0.2s; opacity: 1; transform: translateY(0); }
+    .menu-footer {
+      text-align: center;
+      font-size: 12px;
+      color: #AAAAAA;
+      font-weight: 400;
+      margin-top: 24px;
+      cursor: pointer;
+      transition: color 0.3s ease;
+    }
+    .menu-footer:hover {
+      color: #FFC300;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+    .header-title {
+      font-size: 1.95rem;
+      font-weight: 700;
+    }
+    .hamburger {
+      width: 40px;
+      height: 40px;
+      background-color: #FFC300;
+      border-radius: 50%;
+      position: relative;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    .hamburger span {
+      display: block;
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 20px;
+      height: 2px;
+      background-color: #000;
+      transition: all 0.3s ease;
+    }
+    .hamburger span:nth-child(1) { top: 12px; }
+    .hamburger span:nth-child(2) { top: 19px; }
+    .hamburger span:nth-child(3) { top: 26px; }
+    .hamburger.open { background-color: transparent; }
+    .hamburger.open span { background-color: #fff; }
+    .hamburger.open span:nth-child(1) {
+      top: 50%;
+      transform: translate(-50%, -50%) rotate(45deg);
+    }
+    .hamburger.open span:nth-child(2) {
+      opacity: 0;
+    }
+    .hamburger.open span:nth-child(3) {
+      top: 50%;
+      transform: translate(-50%, -50%) rotate(-45deg);
+    }
+    .intro {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    .intro h2 {
+      font-size: 1.125rem;
+      font-weight: 500;
+      margin-bottom: 12px;
+    }
+    .intro p {
+      font-size: 0.875rem;
+      font-weight: 400;
+      color: #CCCCCC;
+    }
+    .gradient-premium {
+      background: radial-gradient(circle at center, #FF00FB, #A100FF);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      font-weight: 700;
+    }
+    .gradient-stars {
+      background: radial-gradient(circle at center, #FF8800, #FFC300);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      font-weight: 700;
+    }
+    .card {
+      background-color: #1F1F1F;
+      border-radius: 15px;
+      padding: 16px;
+      margin-bottom: 16px;
+      width: 100%;
+    }
+    .card-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .card-header img {
+      width: 24px;
+      height: 24px;
+    }
+    .card-header h3 {
+      font-size: 1rem;
+      margin-left: 8px;
+    }
+    .card p {
+      font-size: 0.8125rem;
+      font-weight: 400;
+      color: #CCCCCC;
+      margin-bottom: 12px;
+    }
+    .btn {
+      display: block;
+      width: 100%;
+      text-align: center;
+      padding: 12px 0;
+      border: none;
+      border-radius: 15px;
+      font-size: 1rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+    .btn-yellow {
+      background-color: #FFC300;
+      color: #000000;
+    }
+    .btn-yellow:hover {
+      background-color: #e0ac00;
+      color: #111;
+    }
+    .bonus {
+      margin-top: 32px;
+    }
+    .bonus h2 {
+      font-size: 1.125rem;
+      font-weight: 500;
+      margin-bottom: 16px;
+    }
+    .bonus-card {
+      background-color: #1C2324;
+      border-radius: 15px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    .bonus-card h3 {
+      font-size: 1rem;
+      font-weight: 500;
+      margin-bottom: 8px;
+    }
+    .bonus-card p {
+      font-size: 0.8125rem;
+      font-weight: 400;
+      color: #CCCCCC;
+      margin-bottom: 12px;
+    }
+    .btn-secondary {
+      background-color: transparent;
+      border: 1px solid #FFC300;
+      color: #FFC300;
+      padding: 10px 0;
+      border-radius: 10px;
+      width: 50%;
+      max-width: 180px;
+      text-align: center;
+      margin: 0 auto;
+      font-size: 0.9375rem;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+    .btn-secondary:hover {
+      background-color: #FFC300;
+      color: #000;
+    }
+    .bottom-sheet {
+      position: fixed;
+      bottom: -100%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      max-width: 900px;
+      background-color: #1C2324;
+      border-top-left-radius: 25px;
+      border-top-right-radius: 25px;
+      padding: 24px;
+      transition: bottom 0.4s ease;
+      z-index: 100;
+      box-shadow: 0 -8px 16px rgba(0,0,0,0.6);
+      backdrop-filter: blur(10px);
+    }
+    .bottom-sheet.active {
+      bottom: 0;
+    }
+    .sheet-header {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 12px;
+    }
+    .cancel-btn {
+      background-color: rgba(255,255,255,0.1);
+      border: none;
+      border-radius: 12px;
+      padding: 6px 12px;
+      color: #fff;
+      font-size: 0.875rem;
+      cursor: pointer;
+      backdrop-filter: blur(8px);
+    }
+    .sheet-content label {
+      display: block;
+      font-size: 0.875rem;
+      margin-bottom: 4px;
+      color: #aaa;
+    }
+    .sheet-content input, .sheet-content select {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: none;
+      margin-bottom: 12px;
+      font-size: 1rem;
+      background-color: #2a2a2a;
+      color: #fff;
+    }
+    .sheet-content select {
+      appearance: none;
+      background-image: url('data:image/svg+xml;utf8,<svg fill="white" height="20" viewBox="0 0 24 24" width="20" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>');
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      background-size: 20px;
+    }
+    .fade-in {
+      animation: fadeInUp 0.4s ease-out;
+    }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .payment-btn {
+      width: 355px;
+      height: 55px;
+      border-radius: 15px;
+      border: none;
+      font-weight: bold;
+      font-size: 1rem;
+      margin: 16px auto;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      color: #fff;
+      position: relative;
+      overflow: hidden;
+    }
+    .payment-btn.rouble { background: #000; }
+    .payment-btn.crypto { background: #002755; }
+    .payment-btn.stars {
+      background: #FF8800;
+    }
+    .logo-group {
+      display: flex;
+      position: relative;
+      gap: 0;
+    }
+    .logo {
+      width: 35px;
+      height: 35px;
+      border-radius: 50%;
+      overflow: hidden;
+      box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.9);
+      position: relative;
+    }
+    .logo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .logo + .logo { margin-left: -12px; z-index: 1; }
+    .logo:first-child { z-index: 3; }
+    .logo:nth-child(2) { z-index: 2; }
+  </style>
+</head>
+<body>
+
+  <div class="overlay" id="overlay"></div>
+
+  <nav class="menu" id="menu">
+    <ul>
+      <li data-url="https://t.me/vpceo_m">Поддержка</li>
+      <li data-url="tasks.html">Задания</li>
+      <li data-url="referrals.html">Рефералы</li>
+    </ul>
+    <div class="menu-footer" data-url="terms.html">Условия обслуживания</div>
+  </nav>
+
+  <div class="container">
+    <div class="header">
+      <div class="header-title">VP Market</div>
+      <button class="hamburger" id="hamburger">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+
+    <div class="intro">
+      <h2>Маркет звёзд и премиум</h2>
+      <p>С нашим сервисом вы можете купить подписку Telegram или Stars быстро и безопасно.</p>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <img src="img/premium-icon.png" alt="Premium Icon">
+        <h3 class="gradient-premium">PREMIUM</h3>
+      </div>
+      <p>Купите Premium для себя или для друга по выгодной цене, используя для оплаты: Рубли, Stars или CryptoPay</p>
+      <button class="btn btn-yellow">Купить Premium</button>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <img src="img/star-icon.png" alt="Star Icon">
+        <h3 class="gradient-stars">STARS</h3>
+      </div>
+      <p>Купите Stars для себя или для друга по выгодной цене, используя для оплаты: Рубли или CryptoPay</p>
+      <button class="btn btn-yellow">Купить Stars</button>
+    </div>
+
+    <div class="bonus">
+      <h2>Бонусные предложения</h2>
+
+      <div class="bonus-card">
+        <h3>Задания</h3>
+        <p>Выполняйте задания от партнёров, получайте бонусы на нашем маркете</p>
+        <button class="btn-secondary" id="viewTasks" data-url="tasks.html">Смотреть</button>
+      </div>
+
+      <div class="bonus-card">
+        <h3>Рефералы</h3>
+        <p>Приглашайте друзей и получайте прибыль с их комиссий</p>
+        <button class="btn-secondary" id="inviteFriends" data-url="referrals.html">Пригласить</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="bottom-sheet" id="bottomSheet">
+    <div class="sheet-header">
+      <button class="cancel-btn" onclick="closeSheet()">Отмена</button>
+    </div>
+    <div class="sheet-content" id="sheetContent"></div>
+  </div>
+  
+  <div class="bottom-sheet" id="paymentSheet">
+    <div class="sheet-header">
+      <button class="cancel-btn" onclick="cancelPayment()">Отмена</button>
+    </div>
+    <div class="sheet-content" id="paymentContent"></div>
+  </div>
+  
+  <script>
+    (function() {
+      const overlay = document.getElementById('overlay');
+      const hamburger = document.getElementById('hamburger');
+      const menu = document.getElementById('menu');
+      let selectedType = '';
+      let userData = {};
+  
+      // === FULLSCREEN INIT ===
+      const isTelegram = window.Telegram && window.Telegram.WebApp;
+      if (isTelegram) {
+        const webApp = window.Telegram.WebApp;
+        webApp.ready();
+        webApp.requestFullscreen();
+  
+        webApp.onEvent('fullscreenChanged', isFs => {
+          console.log('Telegram WebApp fullscreenChanged:', isFs);
+        });
+        webApp.onEvent('fullscreenFailed', () => {
+          console.warn('Telegram WebApp fullscreenFailed');
+        });
+  
+        // Обработка safe area
+        function adjustSafeArea() {
+          const insets = webApp.safeAreaInset;
+          document.body.style.paddingTop = `${insets.top}px`;
+          document.body.style.paddingBottom = `${insets.bottom}px`;
+        }
+        webApp.onEvent('safeAreaChanged', adjustSafeArea);
+        webApp.onEvent('contentSafeAreaChanged', adjustSafeArea);
+        adjustSafeArea();
+      } else {
+        // Fallback для обычного браузера
+        document.addEventListener('DOMContentLoaded', () => {
+          if (document.documentElement.requestFullscreen) {
+            document.documentElement.requestFullscreen().catch(err => {
+              console.warn('Browser fullscreen failed:', err);
+            });
+          }
+        });
+        document.addEventListener('fullscreenchange', () => {
+          console.log('Browser fullscreenchange, isFullscreen=', !!document.fullscreenElement);
+        });
+      }
+  
+      // === MENU TOGGLE ===
+      hamburger.addEventListener('click', () => {
+        hamburger.classList.toggle('open');
+        menu.classList.toggle('active');
+        overlay.classList.toggle('active');
+      });
+      overlay.addEventListener('click', () => {
+        hamburger.classList.remove('open');
+        menu.classList.remove('active');
+        overlay.classList.remove('active');
+        closeSheet();
+        cancelPayment();
+      });
+  
+      // === NAVIGATION ===
+      document.querySelectorAll('.menu li').forEach(li => {
+        li.addEventListener('click', () => {
+          window.location.href = li.dataset.url;
+        });
+      });
+      document.querySelector('.menu-footer').addEventListener('click', () => {
+        window.location.href = document.querySelector('.menu-footer').dataset.url;
+      });
+      document.getElementById('viewTasks').addEventListener('click', () => {
+        window.location.href = document.getElementById('viewTasks').dataset.url;
+      });
+      document.getElementById('inviteFriends').addEventListener('click', () => {
+        window.location.href = document.getElementById('inviteFriends').dataset.url;
+      });
+  
+      // === PURCHASE SHEETS ===
+      function openSheet(type) {
+        selectedType = type;
+        const sheet = document.getElementById('bottomSheet');
+        const sheetContent = document.getElementById('sheetContent');
+        sheet.classList.add('active');
+        overlay.classList.add('active');
+  
+        const isPremium = type === 'premium';
+        const inputHTML = isPremium
+          ? `<select id="select">
+               <option disabled selected>Выберите период</option>
+               <option value="3">3 месяца</option>
+               <option value="6">6 месяцев</option>
+               <option value="12">12 месяцев</option>
+             </select>`
+          : `<input id="select" type="number" placeholder="от 50 до 15000" min="50" max="15000" />`;
+        const label = isPremium ? 'Период' : 'КОЛ-ВО';
+  
+        sheetContent.innerHTML = `
+          <h3 style="text-align:center; margin-bottom: 16px;">
+            Покупка Telegram ${isPremium ? 'Premium' : 'Stars'}
+          </h3>
+          <label>Получатель:</label>
+          <input type="text" id="username" placeholder="username" />
+          <div class="error" id="usernameError"></div>
+          <label>${label}:</label>
+          ${inputHTML}
+          <div class="error" id="selectError"></div>
+          <button class="btn btn-yellow" style="margin-top: 20px;"
+            onclick="continueToPayment()">Продолжить</button>
+        `;
+      }
+  
+      function continueToPayment() {
+        const rawUsername = document.getElementById('username').value.trim();
+        const username = rawUsername.startsWith('@') ? rawUsername : '@' + rawUsername;
+        const selection = document.getElementById('select').value;
+        const usernameError = document.getElementById('usernameError');
+        const selectError = document.getElementById('selectError');
+        usernameError.textContent = '';
+        selectError.textContent = '';
+  
+        let valid = true;
+        if (!/^@[a-zA-Z0-9_]{4,32}$/.test(username)) {
+          usernameError.textContent = 'Неверный username';
+          valid = false;
+        }
+        if (!selection || (selectedType === 'stars' && (selection < 50 || selection > 15000))) {
+          selectError.textContent = selectedType === 'stars'
+            ? 'Введите от 50 до 15000'
+            : 'Выберите период';
+          valid = false;
+        }
+        if (!valid) return;
+  
+        if (selectedType === 'premium') {
+          const priceMap = { '3': 1000, '6': 1600, '12': 3000 };
+          const starsMap = { '3': 750, '6': 1000, '12': 2000 };
+          userData = {
+            username,
+            item: `Premium for ${selection}m`,
+            amount: priceMap[selection] || 0,
+            stars: starsMap[selection] || 0
+          };
+        } else {
+          const starsCount = parseInt(selection, 10);
+          const rate = starsCount < 100 ? 1.7
+            : starsCount < 500 ? 1.6
+            : 1.55;
+          userData = {
+            username,
+            item: `Stars x${starsCount}`,
+            amount: Math.round(starsCount * rate)
+          };
+        }
+  
+        closeSheet();
+        showPaymentSheet();
+      }
+  
+      function showPaymentSheet() {
+        const paymentSheet = document.getElementById('paymentSheet');
+        const paymentContent = document.getElementById('paymentContent');
+        paymentSheet.classList.add('active');
+        overlay.classList.add('active');
+  
+        const rubLogos = `
+          <div class="logo-group">
+            <div class="logo"><img src="img/rub1.png" alt=""></div>
+            <div class="logo"><img src="img/rub2.png" alt=""></div>
+            <div class="logo"><img src="img/rub3.png" alt=""></div>
+          </div>`;
+        const cryptoLogo = `
+          <div class="logo-group">
+            <div class="logo"><img src="img/crypto.png" alt=""></div>
+          </div>`;
+        let amountHTML = `<p><strong>Сумма:</strong> ${userData.amount} ₽`;
+        if (userData.stars !== undefined) {
+          amountHTML += ` (${userData.stars}⭐)`;
+        }
+        amountHTML += `</p>`;
+  
+        let buttonsHTML = `
+          <button class="payment-btn rouble">
+            <span>Рубли</span>
+            ${rubLogos}
+          </button>
+          <button class="payment-btn crypto">
+            <span>CryptoPay</span>
+            ${cryptoLogo}
+          </button>`;
+        if (userData.stars !== undefined) {
+          buttonsHTML += `
+            <button class="payment-btn stars">
+              <span>Telegram stars</span>
+              <div class="logo-group">
+                <div class="logo"><img src="img/star-pay.png" alt=""></div>
+              </div>
+            </button>`;
+        }
+  
+        paymentContent.innerHTML = `
+          <h3 style="text-align:center; margin-bottom: 16px;">
+            Выберите метод оплаты
+          </h3>
+          <p><strong>Получатель:</strong> ${userData.username}</p>
+          <p><strong>Товар:</strong> ${userData.item}</p>
+          ${amountHTML}
+          ${buttonsHTML}
+        `;
+      }
+  
+      function closeSheet() {
+        document.getElementById('bottomSheet').classList.remove('active');
+        overlay.classList.remove('active');
+      }
+  
+      function cancelPayment() {
+        document.getElementById('paymentSheet').classList.remove('active');
+        overlay.classList.remove('active');
+        userData = {};
+      }
+  
+      document.querySelectorAll('.btn-yellow').forEach((btn, i) => {
+        btn.addEventListener('click', () => openSheet(i === 0 ? 'premium' : 'stars'));
+      });
+    })();
+  </script>
+  
+</body>
+</html>
